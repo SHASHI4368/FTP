@@ -8,10 +8,10 @@ import java.util.ArrayList;
 public class Server {
     public static final int port = 7777;
     public static ArrayList filePaths = new ArrayList();
-    public static Socket socket = null;
+
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
-
+        Socket socket = null;
 
         while (true) {
             int choice = showMenu();
@@ -25,16 +25,14 @@ public class Server {
                     System.out.println("Client is connected....\n\n");
                     break;
                 case 3:
-                    ArrayList threads = new ArrayList();
                     for(int i=0; i<filePaths.size(); i++){
-                        threads.add(new Thread(new FileThread((String) filePaths.get(i), socket, serverSocket)));
-                    }
-                    for(int i=0; i<filePaths.size(); i++){
-                        ((Thread) threads.get(i)).start();
-                        try {
-                            ((Thread) threads.get(i)).join();
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                        if(socket != null && !socket.isClosed()){
+                            sendFile((String) filePaths.get(i), socket);
+                        }else if(socket == null){
+                            System.out.println("Not connected to server. Please connect first.");
+                        }else if(socket.isClosed()){
+                            socket = serverSocket.accept();
+                            sendFile((String) filePaths.get(i), socket);
                         }
                     }
                     break;
