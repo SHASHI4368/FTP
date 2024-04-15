@@ -3,10 +3,11 @@ package ftp;
 import javax.swing.*;
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Server {
     public static final int port = 7777;
-    public static String filePath = "";
+    public static ArrayList filePaths = new ArrayList();
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
@@ -16,7 +17,7 @@ public class Server {
             int choice = showMenu();
             switch (choice) {
                 case 1:
-                    filePath = getFilePath();
+                    filePaths = getFilePath();
                     break;
                 case 2:
                     System.out.println("Waiting for client to connect....");
@@ -24,13 +25,15 @@ public class Server {
                     System.out.println("Client is connected....\n\n");
                     break;
                 case 3:
-                    if(socket != null && !socket.isClosed()){
-                        sendFile(filePath, socket);
-                    }else if(socket == null){
-                        System.out.println("Not connected to server. Please connect first.");
-                    }else if(socket.isClosed()){
-                        socket = serverSocket.accept();
-                        sendFile(filePath, socket);
+                    for(int i=0; i<filePaths.size(); i++){
+                        if(socket != null && !socket.isClosed()){
+                            sendFile((String) filePaths.get(i), socket);
+                        }else if(socket == null){
+                            System.out.println("Not connected to server. Please connect first.");
+                        }else if(socket.isClosed()){
+                            socket = serverSocket.accept();
+                            sendFile((String) filePaths.get(i), socket);
+                        }
                     }
                     break;
                 case 4:
@@ -53,17 +56,21 @@ public class Server {
         return choice + 1; // Adjust choice to match menu options (1-based)
     }
 
-    public static String getFilePath() {
-        String filePath = "";
+    public static ArrayList getFilePath(){
+        ArrayList fileNames = new ArrayList();
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setCurrentDirectory(new File("."));
-        int result = fileChooser.showOpenDialog(null);
+        fileChooser.setMultiSelectionEnabled(true);
+        int result = fileChooser.showOpenDialog(fileChooser);
 
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            filePath = selectedFile.getAbsolutePath();
+        if(result == JFileChooser.APPROVE_OPTION){
+            File [] selectedFiles = fileChooser.getSelectedFiles();
+
+            for(File file: selectedFiles){
+                fileNames.add(file.getAbsolutePath());
+            }
         }
-        return filePath;
+        return fileNames;
     }
 
     public static void sendFile(String filePath, Socket socket) throws IOException {
