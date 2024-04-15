@@ -33,6 +33,7 @@ public class Client {
                         System.out.println("Not connected to server. Please connect first.");
                     }else if(socket.isClosed()){
                         socket = new Socket(ipAddress, port);
+                        receiveFile(folderPath);
                     }
                     break;
                 case 4:
