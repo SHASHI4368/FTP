@@ -25,14 +25,20 @@ public class Server {
                     System.out.println("Client is connected....\n\n");
                     break;
                 case 3:
-                    for(int i=0; i<filePaths.size(); i++){
-                        if(socket != null && !socket.isClosed()){
-                            sendFile((String) filePaths.get(i), socket);
-                        }else if(socket == null){
+                    // Send the size of the filePaths ArrayList to the client
+                    if(!filePaths.isEmpty()){
+                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+                        objectOutputStream.writeInt(filePaths.size());
+                        objectOutputStream.flush();
+                    }
+                    for (Object filePath : filePaths) {
+                        if (socket != null && !socket.isClosed()) {
+                            sendFile((String) filePath, socket);
+                        } else if (socket == null) {
                             System.out.println("Not connected to server. Please connect first.");
-                        }else if(socket.isClosed()){
+                        } else if (socket.isClosed()) {
                             socket = serverSocket.accept();
-                            sendFile((String) filePaths.get(i), socket);
+                            sendFile((String) filePath, socket);
                         }
                     }
                     break;
