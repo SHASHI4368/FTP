@@ -30,16 +30,17 @@ public class Client {
                     ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
                     int size = objectInputStream.readInt();
                     System.out.println("Receiving " + size + " files");
-                    for(int i=0; i<size; i++) {
-                        if (socket != null && !socket.isClosed()) {
-                            receiveFile(folderPath);
-                        } else if (socket == null) {
-                            System.out.println("Not connected to server. Please connect first.");
-                        } else if (socket.isClosed()) {
-                            socket = new Socket(ipAddress, port);
-                            receiveFile(folderPath);
-                        }
+                    for(int i=0; i<size; i++){
+                    if (socket != null && !socket.isClosed()) {
+                        receiveFile(folderPath);
+                    } else if(socket == null) {
+                        System.out.println("Not connected to server. Please connect first.");
+                    }else if(socket.isClosed()){
+                        socket = new Socket(ipAddress, port);
+                        receiveFile(folderPath);
                     }
+                    }
+                    socket = new Socket(ipAddress, port);
                     break;
                 case 4:
                     System.out.println("Exiting...");

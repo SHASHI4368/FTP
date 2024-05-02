@@ -41,6 +41,7 @@ public class Server {
                             sendFile((String) filePath, socket);
                         }
                     }
+                    socket = serverSocket.accept();
                     break;
                 case 4:
                     System.out.println("Exiting...");
