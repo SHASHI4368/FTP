@@ -8,11 +8,11 @@ import java.util.ArrayList;
 public class Server {
     public static final int port = 7777;
     public static ArrayList filePaths = new ArrayList();
+    public static ArrayList clients = new ArrayList();
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
         Socket socket = null;
-
         while (true) {
             int choice = showMenu();
             switch (choice) {
@@ -21,27 +21,15 @@ public class Server {
                     break;
                 case 2:
                     System.out.println("Waiting for client to connect....");
-                    socket = serverSocket.accept();
-                    System.out.println("Client is connected....\n\n");
+                    ServerThread s = new ServerThread(serverSocket);
+                    clients.add(s);
                     break;
                 case 3:
-                    // Send the size of the filePaths ArrayList to the client
-                    if(!filePaths.isEmpty()){
-                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-                        objectOutputStream.writeInt(filePaths.size());
-                        objectOutputStream.flush();
+                    System.out.println(clients.size());
+                    for(int i=0; i<clients.size(); i++){
+                        Thread t = new Thread(new FileSender(filePaths, ((ServerThread)clients.get(i))));
+                        t.start();
                     }
-                    for (Object filePath : filePaths) {
-                        if (socket != null && !socket.isClosed()) {
-                            sendFile((String) filePath, socket);
-                        } else if (socket == null) {
-                            System.out.println("Not connected to server. Please connect first.");
-                        } else if (socket.isClosed()) {
-                            socket = serverSocket.accept();
-                            sendFile((String) filePath, socket);
-                        }
-                    }
-                    socket = serverSocket.accept();
                     break;
                 case 4:
                     System.out.println("Exiting...");
@@ -80,34 +68,4 @@ public class Server {
         return fileNames;
     }
 
-    public static void sendFile(String filePath, Socket socket) throws IOException {
-        // Get the file size
-        File file = new File(filePath);
-        long fileSize = file.length();
-
-        // Create a buffer to read the file
-        byte[] buffer = new byte[1024];
-        FileInputStream fileInputStream = new FileInputStream(file);
-
-        // Get the file name
-        String fileName = file.getName();
-
-        // Get the output stream to send data to the client
-        OutputStream outputStream = socket.getOutputStream();
-
-        // Write the filename length and filename to the output stream
-        byte[] fileNameBytes = fileName.getBytes();
-        outputStream.write(fileNameBytes.length); // Write the length of the filename
-        outputStream.write(fileNameBytes); // Write the filename
-
-        // Read the file into the buffer and send to the client
-        int bytesRead;
-        while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-        }
-
-        // Close streams and sockets
-        fileInputStream.close();
-        outputStream.close();
-    }
 }
