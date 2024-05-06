@@ -26,7 +26,7 @@ public class FTPClientUI extends JFrame {
     public static void main(String[] args) throws UnknownHostException {
         SwingUtilities.invokeLater(FTPClientUI::new);
 //        ipAddress = InetAddress.getLocalHost();
-        ipAddress = InetAddress.getByName("192.168.1.6");
+//        ipAddress = InetAddress.getByName("192.168.1.6");
     }
 
     private void createUI() {
@@ -40,19 +40,41 @@ public class FTPClientUI extends JFrame {
 
             // Connection Status Label
             connectionStatus = new JLabel("Not connected");
-            connectionStatus.setAlignmentX(Component.CENTER_ALIGNMENT); // Center align the label
+            connectionStatus.setAlignmentX(Component.CENTER_ALIGNMENT);  // Center align the label
 
+            // Horizontal Panel for IP Field and Connect Button
+            JPanel connectPanel = new JPanel();
+            connectPanel.setLayout(new BoxLayout(connectPanel, BoxLayout.X_AXIS));
+
+            // Server IP Text Field
+            JTextField serverIPField = new JTextField(10);  // Adjust size as needed
+            serverIPField.setMaximumSize(new Dimension(Integer.MAX_VALUE, serverIPField.getPreferredSize().height));
+            //==============================================================================================
+            String serverIp = serverIPField.getText();
             // Connect Button
             JButton connectButton = new JButton("Connect");
-            connectButton.setAlignmentX(Component.CENTER_ALIGNMENT); // Center align the button
-            connectButton.addActionListener(e -> connectToServer());
-            connectButton.setPreferredSize(new Dimension(150, 30));
+            connectButton.addActionListener(e -> {
+                try {
+                    ipAddress = InetAddress.getByName(serverIPField.getText());
+                    connectToServer();
+                } catch (UnknownHostException ex) {
+                    Logger.getLogger(FTPClientUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            //=====================================================================================================
+
+
+
+            // Add components to connect panel
+            connectPanel.add(connectButton);
+            connectPanel.add(Box.createHorizontalStrut(5));  // Space between the text field and the button
+            connectPanel.add(serverIPField);
 
             // Add components to the panel
-            topPanel.add(Box.createVerticalGlue()); // Add space above or stretch
+            topPanel.add(Box.createVerticalGlue());  // Add space above or stretch
             topPanel.add(connectionStatus);
-            topPanel.add(Box.createVerticalStrut(10)); // Space between the label and the button
-            topPanel.add(connectButton);
+            topPanel.add(Box.createVerticalStrut(10));  // Space between the label and the button
+            topPanel.add(connectPanel);
             topPanel.add(Box.createVerticalGlue());
 
             JPanel destinationPanel = new JPanel();
@@ -117,18 +139,17 @@ public class FTPClientUI extends JFrame {
         if (socket == null || socket.isClosed()) {
             try {
                 socket = new Socket(ipAddress, port);
-                connectionStatus.setText("Connected to the server");
+                if(socket.isConnected()){
+                    connectionStatus.setText("Connected to the server");
+                }else{
+                    connectionStatus.setText("No server detected");
+                }
             } catch (IOException e) {
                 connectionStatus.setText("No server detected");
             }
         } else {
             System.out.println("Already connected to server.");
         }
-        // Simulate connection
-
-        // Populate the list with dummy data (replace this with actual server data retrieval)
-//        fileListModel.addElement("example-file1.txt");
-//        fileListModel.addElement("example-file2.txt");
     }
 
     private void chooseDestination() {

@@ -4,10 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.logging.Level;
@@ -28,13 +25,7 @@ public class FTPServerUI extends JFrame {
     public FTPServerUI() {
         super("FTP Server");
         wlanIp = getWifiIpAddress();
-        InetAddress inet;
-        try {
-            inet = InetAddress.getLocalHost();
-            ethernetIp = inet.getHostAddress();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(FTPServerUI.class.getName());
-        }
+        ethernetIp = getEthernetIPAddress();
         createUI();
     }
 
@@ -64,6 +55,29 @@ public class FTPServerUI extends JFrame {
             e.printStackTrace();
             return "Error: " + e.getMessage();
         }
+    }
+
+    public static String getEthernetIPAddress() {
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                if (iface.isLoopback() || !iface.isUp())
+                    continue;
+
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (addr instanceof Inet4Address && iface.getName().startsWith("eth")) {
+                        return addr.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            System.out.println("error");
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private void createUI() {
